@@ -1,5 +1,3 @@
 SHORT TERM
-
-
-TRANSITION INTO NO VISUALIZATION
-+ make a oneDay function that does what the root does now
++ have a makeSignalsInitial thing
++ average 20

@@ -25,12 +25,6 @@ function retimeSignals(signals: Signals, densities: Array < number > , time: Tim
       oA = doubleMod(oA + ROsCorrected[i], CYCLE);
       k[i].oA = oA;
     });
-    // let toLog = [];
-    // // for(var)
-    // forEach(signals, (d, i) => {
-    //   toLog.push({ index: d.index, oA: d.oA, k: densities[i], rOC: ROsCorrected[i], rOO: ROs[i] });
-    // });
-    // console.table(toLog);
 
   }
 }
@@ -41,14 +35,16 @@ export default function(signals: Signals, densities: Array < number > , time: Ti
       return signals;
 };
 
-export const SIGNALS_INITIAL: Signals = range(NUM_SIGNALS)
-  .map(index => {
-    let oA = Math.round(doubleMod(FRO * index, CYCLE)),
-      x = Math.round(index / NUM_SIGNALS * ROAD_LENGTH);
-    return new Signal(index, oA, x);
+export function makeSignalsInitial():Array<Signal>{
+  const signals: Signals = range(NUM_SIGNALS)
+    .map(index => {
+      let oA = Math.round(doubleMod(FRO * index, CYCLE)),
+        x = Math.round(index / NUM_SIGNALS * ROAD_LENGTH);
+      return new Signal(index, oA, x);
+    });
+  forEach(signals, function(signal, i, k): void {
+    let next = i < (k.length - 1) ? k[i + 1] : k[0];
+    signal.setNext(next);
   });
-
-forEach(SIGNALS_INITIAL, function(signal, i, k): void {
-  let next = i < (k.length - 1) ? k[i + 1] : k[0];
-  signal.setNext(next);
-});
+  return signals;
+}

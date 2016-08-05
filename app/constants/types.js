@@ -45,6 +45,7 @@ export type TrafficState = {
   queueing: Cars;
   history: History;
   moving: Cars;
+  exited: Cars;
   cells: Cells;
   measurement: Measurement;
   densities: Array<number>;

@@ -4,7 +4,7 @@ import { range, filter, isEqual, forEach, random, sum, map, partition, sortBy, m
 import { Car} from '../constants/types';
 import type { HistoryDatum, Loc, History, Time, Signal, Cars, Signals, Cell, TrafficState, Measurement } from '../constants/types';
 
-const population: Cars = range(NUM_CARS)
+let population: Cars = range(NUM_CARS)
 	.map(i => {
 		const x: Loc = random(0, ROAD_LENGTH - 1);
 		const tA: Time = RUSH_LENGTH * i / NUM_CARS;
@@ -13,12 +13,33 @@ const population: Cars = range(NUM_CARS)
 
 export const EMPTY_LINKS: Array < number > = map(range(NUM_SIGNALS), i => 0);
 
+export const makeTrafficInitial = ():TrafficState=>{
+	let population: Cars = range(NUM_CARS)
+		.map(i => {
+			const x: Loc = random(0, ROAD_LENGTH - 1);
+			const tA: Time = RUSH_LENGTH * i / NUM_CARS;
+			return new Car(x, tA, i);
+		});
+	return {
+		population,
+		waiting: population,
+		moving: [],
+		queueing: [],
+		history: [],
+		exited: [],
+		cells: range(ROAD_LENGTH).map(x => -SPACE),
+		measurement: { q: 0, k: 0, q_temp: 0, n_temp: 0 },
+		densities: EMPTY_LINKS
+	};
+}
+
 export const TRAFFIC_INITIAL:TrafficState = {
 	population,
 	waiting: population,
 	moving: [],
 	queueing: [],
 	history: [],
+	exited: [],
 	cells: range(ROAD_LENGTH).map(x => -SPACE),
 	measurement: { q: 0, k: 0, q_temp: 0, n_temp: 0 },
 	densities: EMPTY_LINKS
@@ -26,10 +47,10 @@ export const TRAFFIC_INITIAL:TrafficState = {
 
 function calcDensities(moving:Cars, g:number):Array<number>{
 	//count the densities
-	const densities = EMPTY_LINKS.slice(),
-		result = EMPTY_LINKS.slice(),
-		NUM_SLICES = Math.pow(2,g),
-		NUM_PER_SLICE = NUM_SIGNALS/NUM_SLICES;
+	const densities = EMPTY_LINKS.slice();
+	const result = EMPTY_LINKS.slice();
+	const NUM_SLICES = Math.pow(2,g);
+	const	NUM_PER_SLICE = NUM_SIGNALS/NUM_SLICES;
 
 	for (var car of moving) densities[Math.floor(car.x / GAP)]+=1/GAP;
 
@@ -97,10 +118,10 @@ function reduceTraffic(traffic: TrafficState, signals: Signals, time: Time, n:nu
 		for(var c of movingNew) cells[c.x] = time;
 
 		//get rid of the exited people
-		let exited:Array<Car>;
-		[movingNew,exited] = partition(movingNew, d => d.moved <= TRIP_LENGTH);
+		let exitedNew:Array<Car>;
+		[movingNew,exitedNew] = partition(movingNew, d => d.moved <= TRIP_LENGTH);
 
-		for(var c of exited) c.exit(time);
+		for(var c of exitedNew) c.exit(time);
 
 		const densities = calcDensities(movingNew, n);
 
@@ -109,6 +130,7 @@ function reduceTraffic(traffic: TrafficState, signals: Signals, time: Time, n:nu
 			moving: movingNew,
 			queueing: queueingNew,
 			waiting: waitingNew,
+			exited: traffic.exited.concat(exitedNew),
 			measurement: {
 				q,
 				k,

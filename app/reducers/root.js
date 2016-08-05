@@ -1,17 +1,20 @@
 //@flow
 import type {RootState, Cars, Time, Action } from '../constants/types';
-import signalsReduce, { SIGNALS_INITIAL } from './reduce-signals';
+import signalsReduce, { makeSignalsInitial } from './reduce-signals';
 import { MFD_INITIAL } from './reduce-mfd';
-import trafficReduce, { TRAFFIC_INITIAL } from './reduce-traffic';
+import trafficReduce, { makeTrafficInitial } from './reduce-traffic';
 import { RUSH_LENGTH } from '../constants/constants';
+import {mean,cloneDeep} from 'lodash';
 
-const ROOT_INITIAL:RootState = {
-	time: -1,
-	signals: SIGNALS_INITIAL,
-	traffic: TRAFFIC_INITIAL,
-	mfd: MFD_INITIAL,
-	n: 0
-};
+function makeRootState(n:number):RootState{
+	return {
+		time: -1,
+		signals: makeSignalsInitial(),
+		traffic: makeTrafficInitial(),
+		mfd: MFD_INITIAL,
+		n
+	};
+}
 
 function tick(state:RootState):RootState{
 	const time = state.time+1;
@@ -20,9 +23,12 @@ function tick(state:RootState):RootState{
 	return {...state, signals, traffic , time };
 }
 
-function rootReduce(state: RootState = ROOT_INITIAL): RootState {
+export function oneDay(state: RootState): number {
 	while(state.traffic.waiting.length>0 || state.traffic.moving.length>0) state = tick(state);
-	return state;
+	return mean(state.traffic.exited.map(d=>d.tE-d.tA));
 }
 
-export default rootReduce;
+export function runSim(n:number):number{
+	let state = makeRootState(n);
+	return oneDay(state);
+}
