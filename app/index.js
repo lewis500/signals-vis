@@ -7,9 +7,7 @@ type Entry = {
   n: number;
 }
 
-// runSim
-// console.log(runSim(1));
-//
+
 function main(){
   let results:Array<Entry> = [];
   for(var n=0; n<=5; n++){

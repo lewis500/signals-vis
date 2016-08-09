@@ -4,7 +4,6 @@ import { map, sum, range, forEach, zip, isEqual, lt, gte } from 'lodash';
 import { Signal } from '../constants/types';
 import type { Signals, Cars, Time } from '../constants/types';
 
-
 const doubleMod = (a, b) => (a % b + b) % b;
 
 function retimeSignals(signals: Signals, densities: Array < number > , time: Time): void {
